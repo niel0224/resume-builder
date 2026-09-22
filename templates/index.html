@@ -4,13 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI Resume &amp; Portfolio Builder</title>
-  <!-- PWA 설정 -->
+  <!-- PWA 설정 (안드로이드 & iOS 호환) -->
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#2563eb">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+  <meta name="apple-mobile-web-app-title" content="AI Resume">
+  <link rel="apple-touch-icon" sizes="192x192" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+  <link rel="apple-touch-icon" sizes="512x512" href="{{ url_for('static', filename='icons/icon-512.png') }}">
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='icons/icon.svg') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
@@ -18,8 +20,15 @@
   <div class="app-container">
     <!-- Header -->
     <header class="app-header">
-      <h1>AI Resume &amp; Portfolio Builder</h1>
-      <p class="subtitle">이름, 경력, 프로젝트를 입력하면 Gemini AI가 맞춤형 이력서와 포트폴리오 초안을 생성합니다.</p>
+      <div class="header-main">
+        <h1>AI Resume &amp; Portfolio Builder</h1>
+        <p class="subtitle">이름, 경력, 프로젝트를 입력하면 Gemini AI가 맞춤형 이력서와 포트폴리오 초안을 생성합니다.</p>
+      </div>
+      <!-- 상단 헤더 앱 설치 버튼 -->
+      <button type="button" id="headerInstallBtn" class="header-install-btn" title="앱으로 설치하기">
+        <span class="btn-icon">📲</span>
+        <span class="btn-label">앱 설치</span>
+      </button>
     </header>
 
     <!-- Main Content: Left (Form) / Right (Result) -->
@@ -164,6 +173,97 @@
     <footer class="app-footer">
       <p>© AI Resume &amp; Portfolio Builder · Powered by Flask &amp; Google Gemini API</p>
     </footer>
+  </div>
+
+  <!-- PWA 설치 유도 플로팅 배너 (사이트 진입 시 하단 노출) -->
+  <aside id="pwaInstallBanner" class="pwa-install-banner" aria-label="앱 설치 안내" style="display: none;">
+    <div class="banner-content">
+      <div class="banner-icon-box">
+        <img src="{{ url_for('static', filename='icons/icon.svg') }}" alt="앱 아이콘" class="banner-icon">
+      </div>
+      <div class="banner-info">
+        <div class="banner-title">AI Resume &amp; Portfolio</div>
+        <div class="banner-desc">스마트폰 홈 화면에 앱으로 설치하고 더 편리하게 이용하세요!</div>
+      </div>
+    </div>
+    <div class="banner-buttons">
+      <button type="button" id="pwaBannerInstallBtn" class="btn-banner-install">
+        <span class="btn-icon">📲</span>
+        <span class="btn-text">앱 설치</span>
+      </button>
+      <button type="button" id="pwaBannerCloseBtn" class="btn-banner-close" aria-label="배너 닫기">✕</button>
+    </div>
+  </aside>
+
+  <!-- PWA 설치 안내 및 실행 모달 (안드로이드 & 아이폰 공용) -->
+  <div id="pwaInstallModal" class="pwa-modal-backdrop" style="display: none;">
+    <div class="pwa-modal-box">
+      <button type="button" id="pwaModalCloseBtn" class="pwa-modal-close" aria-label="닫기">✕</button>
+      
+      <div class="pwa-modal-header">
+        <img src="{{ url_for('static', filename='icons/icon.svg') }}" alt="앱 아이콘" class="pwa-modal-icon">
+        <h3 id="pwaModalTitle">AI Resume &amp; Portfolio 설치</h3>
+        <p class="pwa-modal-subtitle">브라우저 창 없이 독립형 앱으로 더 빠르고 쾌적하게 사용하세요.</p>
+      </div>
+
+      <!-- 기기 전환 탭 -->
+      <div class="pwa-tabs">
+        <button type="button" id="tabAndroidBtn" class="pwa-tab active">🤖 안드로이드 / PC</button>
+        <button type="button" id="tabIosBtn" class="pwa-tab">🍎 아이폰 (iOS)</button>
+      </div>
+
+      <!-- 1. 안드로이드 / PC 설치 패널 -->
+      <div id="panelAndroid" class="pwa-panel active">
+        <div class="pwa-features-list">
+          <div class="pwa-feature-item">⚡ <strong>초고속 로딩:</strong> 오프라인 캐싱 및 부드러운 전환</div>
+          <div class="pwa-feature-item">📱 <strong>풀스크린 환경:</strong> 주소창 없는 시원한 전용 앱 화면</div>
+          <div class="pwa-feature-item">🏠 <strong>홈 화면 바로가기:</strong> 앱 아이콘으로 원터치 실행</div>
+        </div>
+        
+        <button type="button" id="pwaDirectInstallBtn" class="btn-pwa-primary">
+          <span>📲</span> 지금 바로 앱 설치하기
+        </button>
+        
+        <div id="pwaManualAndroidGuide" class="pwa-manual-guide" style="display: none;">
+          <p class="guide-tip">💡 브라우저 설치 창이 바로 뜨지 않는 경우:</p>
+          <ol>
+            <li><strong>모바일(크롬/삼성인터넷):</strong> 브라우저 우측 상단 메뉴(<strong>⋮</strong>) 터치 후 <strong>[홈 화면에 추가]</strong> 또는 <strong>[앱 설치]</strong> 선택</li>
+            <li><strong>PC(크롬/엣지):</strong> 상단 주소창 맨 우측의 <strong>[설치 ⊕]</strong> 아이콘 클릭</li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- 2. 아이폰(iOS Safari) 설치 패널 -->
+      <div id="panelIos" class="pwa-panel">
+        <div class="ios-install-steps">
+          <div class="ios-step-item">
+            <div class="step-num">1</div>
+            <div class="step-text">
+              사파리(Safari) 브라우저 하단의 <strong>[공유 버튼 ⎙ / ⬆️]</strong>을 탭합니다.
+            </div>
+          </div>
+          <div class="ios-step-item">
+            <div class="step-num">2</div>
+            <div class="step-text">
+              나타난 메뉴를 아래로 스크롤하여 <strong>[홈 화면에 추가 ➕]</strong>를 선택합니다.
+            </div>
+          </div>
+          <div class="ios-step-item">
+            <div class="step-num">3</div>
+            <div class="step-text">
+              우측 상단의 <strong>[추가]</strong> 버튼을 누르면 홈 화면에 앱 아이콘이 생성됩니다!
+            </div>
+          </div>
+        </div>
+        <div class="ios-notice">
+          💡 <em>카카오톡, 인스타그램 등 인앱 브라우저로 접속하신 경우</em>, 우측 하단 점 세 개(<strong>···</strong>)를 눌러 <strong>[Safari로 열기]</strong>를 먼저 진행해 주세요.
+        </div>
+      </div>
+
+      <div class="pwa-modal-footer">
+        <button type="button" id="pwaModalConfirmBtn" class="btn-pwa-secondary">닫기</button>
+      </div>
+    </div>
   </div>
 
   <!-- 마크다운 렌더링 라이브러리 (Marked.js) -->

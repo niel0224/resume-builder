@@ -142,4 +142,171 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   });
+
+  // ==========================================================================
+  // 7. PWA 앱 설치 컨트롤러 (안드로이드, iOS, 데스크톱 호환)
+  // ==========================================================================
+  let deferredPrompt = null;
+  const isIOS = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase()) || 
+                (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+  // 현재 앱이 이미 설치되어 단독 실행 중인지 확인
+  const isStandalone = window.matchMedia("(display-mode: standalone)").matches || 
+                       window.navigator.standalone === true || 
+                       document.referrer.includes("android-app://");
+
+  const headerInstallBtn = document.getElementById("headerInstallBtn");
+  const pwaInstallBanner = document.getElementById("pwaInstallBanner");
+  const pwaBannerInstallBtn = document.getElementById("pwaBannerInstallBtn");
+  const pwaBannerCloseBtn = document.getElementById("pwaBannerCloseBtn");
+
+  const pwaInstallModal = document.getElementById("pwaInstallModal");
+  const pwaModalCloseBtn = document.getElementById("pwaModalCloseBtn");
+  const pwaModalConfirmBtn = document.getElementById("pwaModalConfirmBtn");
+  const pwaDirectInstallBtn = document.getElementById("pwaDirectInstallBtn");
+  const pwaManualAndroidGuide = document.getElementById("pwaManualAndroidGuide");
+
+  const tabAndroidBtn = document.getElementById("tabAndroidBtn");
+  const tabIosBtn = document.getElementById("tabIosBtn");
+  const panelAndroid = document.getElementById("panelAndroid");
+  const panelIos = document.getElementById("panelIos");
+
+  // 모달 열기 함수
+  function openInstallModal() {
+    if (!pwaInstallModal) return;
+
+    if (isIOS) {
+      // iOS인 경우 iOS 안내 탭 활성화
+      switchTab("ios");
+    } else {
+      // 안드로이드 및 데스크톱 기본 활성화
+      switchTab("android");
+      // prompt가 준비되지 않은 브라우저(PC 등)는 수동 안내 표시
+      if (!deferredPrompt && pwaManualAndroidGuide) {
+        pwaManualAndroidGuide.style.display = "block";
+      }
+    }
+
+    pwaInstallModal.style.display = "flex";
+  }
+
+  // 모달 닫기 함수
+  function closeInstallModal() {
+    if (pwaInstallModal) {
+      pwaInstallModal.style.display = "none";
+    }
+  }
+
+  // 탭 전환 함수
+  function switchTab(type) {
+    if (type === "ios") {
+      tabIosBtn?.classList.add("active");
+      tabAndroidBtn?.classList.remove("active");
+      panelIos?.classList.add("active");
+      panelAndroid?.classList.remove("active");
+    } else {
+      tabAndroidBtn?.classList.add("active");
+      tabIosBtn?.classList.remove("active");
+      panelAndroid?.classList.add("active");
+      panelIos?.classList.remove("active");
+    }
+  }
+
+  // 탭 클릭 이벤트
+  tabAndroidBtn?.addEventListener("click", () => switchTab("android"));
+  tabIosBtn?.addEventListener("click", () => switchTab("ios"));
+
+  // 모달 닫기 이벤트
+  pwaModalCloseBtn?.addEventListener("click", closeInstallModal);
+  pwaModalConfirmBtn?.addEventListener("click", closeInstallModal);
+  pwaInstallModal?.addEventListener("click", (e) => {
+    if (e.target === pwaInstallModal) {
+      closeInstallModal();
+    }
+  });
+
+  // 헤더 및 배너의 [앱 설치] 버튼 클릭 시 모달 열기
+  headerInstallBtn?.addEventListener("click", openInstallModal);
+  pwaBannerInstallBtn?.addEventListener("click", openInstallModal);
+
+  // 플로팅 배너 닫기 버튼
+  pwaBannerCloseBtn?.addEventListener("click", () => {
+    if (pwaInstallBanner) {
+      pwaInstallBanner.style.display = "none";
+      sessionStorage.setItem("pwaBannerDismissed", "true");
+    }
+  });
+
+  // 모달 내부 [지금 바로 앱 설치하기] 버튼 클릭 시 브라우저 설치 팝업 트리거
+  pwaDirectInstallBtn?.addEventListener("click", async () => {
+    if (deferredPrompt) {
+      try {
+        deferredPrompt.prompt();
+        const choiceResult = await deferredPrompt.userChoice;
+        console.log("PWA 설치 사용자 선택 결과:", choiceResult.outcome);
+
+        if (choiceResult.outcome === "accepted") {
+          closeInstallModal();
+          if (pwaInstallBanner) pwaInstallBanner.style.display = "none";
+          deferredPrompt = null;
+        }
+      } catch (err) {
+        console.error("앱 설치 프롬프트 실행 중 오류:", err);
+      }
+    } else {
+      // 프롬프트 이벤트가 없을 경우 수동 설치 안내 표시
+      if (pwaManualAndroidGuide) {
+        pwaManualAndroidGuide.style.display = "block";
+        pwaManualAndroidGuide.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  });
+
+  // 이미 독립형 앱으로 실행 중인 경우
+  if (isStandalone) {
+    if (headerInstallBtn) {
+      headerInstallBtn.innerHTML = '<span class="btn-icon">✅</span><span class="btn-label">앱 실행 중</span>';
+      headerInstallBtn.style.opacity = "0.85";
+      headerInstallBtn.style.cursor = "default";
+      headerInstallBtn.onclick = (e) => e.preventDefault();
+    }
+    if (pwaInstallBanner) {
+      pwaInstallBanner.style.display = "none";
+    }
+  } else {
+    // 사이트 진입 시 플로팅 배너 표시 (세션에서 닫지 않은 경우)
+    const isDismissed = sessionStorage.getItem("pwaBannerDismissed") === "true";
+    if (!isDismissed && pwaInstallBanner) {
+      setTimeout(() => {
+        pwaInstallBanner.style.display = "flex";
+      }, 700);
+    }
+  }
+
+  // 브라우저의 beforeinstallprompt 이벤트 가로채기 (안드로이드 크롬, 엣지, 삼성인터넷 등)
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    console.log("PWA beforeinstallprompt 감지됨: 설치 준비 완료");
+
+    if (!isStandalone) {
+      if (headerInstallBtn) headerInstallBtn.style.display = "inline-flex";
+      const isDismissed = sessionStorage.getItem("pwaBannerDismissed") === "true";
+      if (!isDismissed && pwaInstallBanner) {
+        pwaInstallBanner.style.display = "flex";
+      }
+    }
+  });
+
+  // 앱 설치 완료 이벤트 리스너
+  window.addEventListener("appinstalled", () => {
+    console.log("PWA가 성공적으로 설치되었습니다.");
+    if (pwaInstallBanner) pwaInstallBanner.style.display = "none";
+    if (headerInstallBtn) {
+      headerInstallBtn.innerHTML = '<span class="btn-icon">✅</span><span class="btn-label">설치 완료</span>';
+    }
+    closeInstallModal();
+    deferredPrompt = null;
+    alert("🎉 AI Resume & Portfolio Builder 앱이 성공적으로 설치되었습니다!");
+  });
 });

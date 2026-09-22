@@ -1,10 +1,12 @@
-const CACHE_NAME = "resume-builder-v1";
+const CACHE_NAME = "resume-builder-v2";
 const ASSETS_TO_CACHE = [
   "/",
   "/manifest.json",
   "/static/css/style.css",
   "/static/js/app.js",
   "/static/icons/icon.svg",
+  "/static/icons/icon-192.png",
+  "/static/icons/icon-512.png",
   "https://cdn.jsdelivr.net/npm/marked/marked.min.js"
 ];
 

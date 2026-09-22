@@ -3,9 +3,13 @@
   "short_name": "AI Resume",
   "description": "Gemini AI 기반 맞춤형 이력서 및 포트폴리오 생성기",
   "start_url": "/",
+  "id": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#ffffff",
   "theme_color": "#2563eb",
+  "categories": ["productivity", "utilities"],
   "icons": [
     {
       "src": "/static/icons/icon-192.png",
@@ -22,7 +26,8 @@
     {
       "src": "/static/icons/icon.svg",
       "sizes": "any",
-      "type": "image/svg+xml"
+      "type": "image/svg+xml",
+      "purpose": "any"
     }
   ]
 }
