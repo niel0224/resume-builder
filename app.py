@@ -14,8 +14,13 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# 3. Flask 앱 초기화
-app = Flask(__name__)
+# 3. Flask 앱 초기화 (Vercel Serverless 및 로컬 공통 절대 경로 설정)
+base_dir = os.path.abspath(os.path.dirname(__file__))
+app = Flask(
+    __name__,
+    template_folder=os.path.join(base_dir, "templates"),
+    static_folder=os.path.join(base_dir, "static")
+)
 
 # 4. Gemini API 설정
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -32,6 +37,21 @@ def index():
     """메인 페이지 화면 렌더링"""
     logger.info("메인 페이지(/) 접속 요청 수신")
     return render_template("index.html")
+
+
+@app.route("/manifest.json")
+def manifest():
+    """PWA 웹 앱 매니페스트 서빙"""
+    return app.send_static_file("manifest.json")
+
+
+@app.route("/sw.js")
+def service_worker():
+    """PWA 서비스 워커 스크립트 서빙 (루트 스코프 허용 헤더 포함)"""
+    response = app.send_static_file("sw.js")
+    response.headers["Content-Type"] = "application/javascript"
+    response.headers["Service-Worker-Allowed"] = "/"
+    return response
 
 
 @app.route("/generate", methods=["POST"])
