@@ -33,6 +33,9 @@ else:
 
 
 @app.route("/")
+@app.route("/index")
+@app.route("/api/index")
+@app.route("/api/index.py")
 def index():
     """메인 페이지 화면 렌더링"""
     logger.info("메인 페이지(/) 접속 요청 수신")
@@ -55,6 +58,7 @@ def service_worker():
 
 
 @app.route("/generate", methods=["POST"])
+@app.route("/api/generate", methods=["POST"])
 def generate():
     """
     사용자 입력을 바탕으로 Gemini API를 호출하여
