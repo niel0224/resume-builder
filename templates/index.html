@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Resume &amp; Portfolio Builder</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <h1>AI Resume &amp; Portfolio Builder</h1>
+      <p class="subtitle">이름, 경력, 프로젝트를 입력하면 Gemini AI가 맞춤형 이력서와 포트폴리오 초안을 생성합니다.</p>
+    </header>
+
+    <!-- Main Content: Left (Form) / Right (Result) -->
+    <main class="main-layout">
+      <!-- Input Section -->
+      <section class="card form-section">
+        <h2>📝 지원자 정보 입력</h2>
+        <form id="resumeForm">
+          <!-- 이름 -->
+          <div class="form-group">
+            <label for="name">이름 <span class="required">*</span></label>
+            <input type="text" id="name" name="name" placeholder="예: 우동호" required>
+          </div>
+
+          <!-- 지원 직무 -->
+          <div class="form-group">
+            <label for="role">지원 직무 <span class="required">*</span></label>
+            <input type="text" id="role" name="role" placeholder="예: 대학교수 (비즈니스IT / AI융합 분야)" required>
+          </div>
+
+          <!-- 주요 경력 사항 -->
+          <div class="form-group">
+            <label for="experience">주요 경력 사항 <span class="required">*</span></label>
+            <textarea id="experience" name="experience" rows="5" placeholder="예:&#10;- 국민대학교 비즈니스IT대학원 겸임교수&#10;- 한국세무사석박사회 부회장&#10;- 한국세무사회 조세연구소 연구위원" required></textarea>
+          </div>
+
+          <!-- 핵심 프로젝트 및 성과 -->
+          <div class="form-group">
+            <label for="projects">핵심 프로젝트 및 성과 <span class="required">*</span></label>
+            <textarea id="projects" name="projects" rows="6" placeholder="예:&#10;- 차세대 세무 솔루션 AutoTax 개발 (AI 에이전트 기반 자동화)&#10;- AI 금융 플랫폼 FIN TOOL 개발 (가족 투자 전략 알고리즘)&#10;- 세무사 및 실무진 대상 생성형 AI DX 실무 교육 총괄" required></textarea>
+          </div>
+
+          <!-- Tone 선택 -->
+          <div class="form-group">
+            <label for="tone">문체 및 어조 (Tone)</label>
+            <select id="tone" name="tone">
+              <option value="전문적이고 신뢰감 있는 어조" selected>전문적이고 신뢰감 있는 어조</option>
+              <option value="당당하고 성과 지향적인 자신감 있는 어조">당당하고 성과 지향적인 자신감 있는 어조</option>
+              <option value="학술적 깊이와 권위가 느껴지는 정중한 어조">학술적 깊이와 권위가 느껴지는 정중한 어조</option>
+              <option value="열정적이고 혁신적인 적극적 어조">열정적이고 혁신적인 적극적 어조</option>
+              <option value="담백하고 군더더기 없는 명확한 어조">담백하고 군더더기 없는 명확한 어조</option>
+            </select>
+          </div>
+
+          <!-- 이력서 테마 양식 선택 -->
+          <div class="form-group">
+            <label>🎨 이력서 테마 양식 선택</label>
+            <div class="theme-selector">
+              <label class="theme-card">
+                <input type="radio" name="theme_type" value="navy" checked>
+                <div class="theme-preview navy-preview"></div>
+                <div class="theme-info">
+                  <span class="theme-name">모던 네이비 (Sample 1)</span>
+                  <span class="theme-desc">2단 분할 · 학술/전문직 추천</span>
+                </div>
+              </label>
+
+              <label class="theme-card">
+                <input type="radio" name="theme_type" value="classic">
+                <div class="theme-preview classic-preview"></div>
+                <div class="theme-info">
+                  <span class="theme-name">클래식 미니멀</span>
+                  <span class="theme-desc">단정한 흑백 · 정통 공문서 서식</span>
+                </div>
+              </label>
+
+              <label class="theme-card">
+                <input type="radio" name="theme_type" value="tech">
+                <div class="theme-preview tech-preview"></div>
+                <div class="theme-info">
+                  <span class="theme-name">실리콘밸리 테크</span>
+                  <span class="theme-desc">네온 인디고 · 핀테크/AI 감성</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Prompt 모드 선택 (A/B) -->
+          <div class="form-group">
+            <label>프롬프트 모드 선택</label>
+            <div class="radio-options">
+              <label class="radio-card">
+                <input type="radio" name="prompt_type" value="A" checked>
+                <div class="radio-content">
+                  <span class="radio-title">Prompt A (일반형)</span>
+                  <span class="radio-desc">기업 및 기관 지원용 표준적이고 깔끔한 이력서</span>
+                </div>
+              </label>
+
+              <label class="radio-card">
+                <input type="radio" name="prompt_type" value="B">
+                <div class="radio-content">
+                  <span class="radio-title">Prompt B (전문가형)</span>
+                  <span class="radio-desc">교수/임원급 STAR 성과 분석 및 학술·실무 역량 심화형</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- 생성 버튼 -->
+          <button type="submit" id="generateBtn" class="btn btn-primary">
+            ✨ AI 이력서 &amp; 포트폴리오 생성
+          </button>
+        </form>
+      </section>
+
+      <!-- Result Section -->
+      <section class="card result-section">
+        <div class="result-header">
+          <h2>📄 생성 결과</h2>
+          <div class="action-buttons" id="actionButtons" style="display: none;">
+            <button id="copyBtn" class="btn btn-sm btn-outline">📋 복사하기</button>
+            <button id="downloadBtn" class="btn btn-sm btn-outline">💾 .md 다운로드</button>
+          </div>
+        </div>
+
+        <!-- 오류 메시지 표시 영역 -->
+        <div id="errorMessage" class="alert-box alert-error" style="display: none;"></div>
+
+        <!-- 로딩 표시기 -->
+        <div id="loadingIndicator" class="loading-state" style="display: none;">
+          <div class="spinner"></div>
+          <p class="loading-title">Gemini AI가 이력서와 포트폴리오를 작성하고 있습니다...</p>
+          <p class="loading-sub">잠시만 기다려 주세요 (약 5~10초 소요)</p>
+        </div>
+
+        <!-- 대기 상태 (빈 화면 안내) -->
+        <div id="emptyState" class="empty-state">
+          <div class="empty-icon">💡</div>
+          <p class="empty-title">아직 생성된 이력서가 없습니다.</p>
+          <p class="empty-desc">왼쪽 폼에 정보를 입력하고 [생성] 버튼을 누르면<br>이곳에 맞춤형 이력서와 포트폴리오가 나타납니다.</p>
+        </div>
+
+        <!-- 결과 마크다운 렌더링 표시 영역 -->
+        <div id="resultContainer" class="result-content markdown-body" style="display: none;">
+          <div id="resultText"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>© AI Resume &amp; Portfolio Builder · Powered by Flask &amp; Google Gemini API</p>
+    </footer>
+  </div>
+
+  <!-- 마크다운 렌더링 라이브러리 (Marked.js) -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
